@@ -1,5 +1,13 @@
 # ModelScrapOR
 
+**THIS PROJECT WAS "VIBE-CODED" BY Claude Sonnet 4.5 AS A TEST**
+
+It's a quick script I've wanted for myself and I've made it public only for educational purposes.
+
+All contents except in this one paragraph is AI-generated.
+
+---
+
 > Daily OpenRouter AI Model Rankings & Pricing Tracker
 
 ModelScrapOR is a Python script that scrapes the OpenRouter API to generate comprehensive daily reports of AI model rankings, pricing, and availability across multiple categories.
@@ -33,10 +41,15 @@ pip install -r requirements.txt
 ```
 
 3. **Set up API key**:
-Add your OpenRouter API key to your shell configuration:
+
+Create a `.env` file in the project root:
 ```bash
-echo 'export OPENROUTER_API_KEY="your_api_key_here"' >> ~/.zshrc
-source ~/.zshrc
+echo 'OPENROUTER_API_KEY="your_api_key_here"' > .env
+```
+
+Or create it manually with your editor:
+```env
+OPENROUTER_API_KEY=your_api_key_here
 ```
 
 To get an OpenRouter API key:
@@ -44,6 +57,8 @@ To get an OpenRouter API key:
 - Sign up or log in
 - Navigate to API Keys section
 - Generate a new key
+
+**Note**: The `.env` file is gitignored and will not be uploaded to the repository.
 
 ## Usage
 
@@ -170,12 +185,25 @@ This will show a GUI prompt for password authentication.
 ### API Key Not Found
 
 If you get an API key error:
-```bash
-# Check if the variable is set
-echo $OPENROUTER_API_KEY
 
-# If empty, add it to ~/.zshrc and reload
-source ~/.zshrc
+1. **Check if `.env` file exists**:
+```bash
+ls -la .env
+```
+
+2. **Verify the file contents**:
+```bash
+cat .env
+```
+
+Should show:
+```
+OPENROUTER_API_KEY=your_actual_key_here
+```
+
+3. **Recreate if missing**:
+```bash
+echo 'OPENROUTER_API_KEY="your_api_key_here"' > .env
 ```
 
 ### Missing Dependencies
