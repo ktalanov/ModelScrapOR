@@ -84,6 +84,38 @@ class Model:
     def price_display(self) -> str:
         """Format pricing for display."""
         return f"(${self.input_price:.2f}/${self.output_price:.2f})"
+    
+    def calculate_conversation_cost(self, user_tokens: int = 125, 
+                                   model_tokens: int = 375, 
+                                   turns: int = 10) -> float:
+        """Calculate cost for a multi-turn conversation.
+        
+        Args:
+            user_tokens: Tokens per user message (default: 125).
+            model_tokens: Tokens per model response (default: 375).
+            turns: Number of turns in conversation (default: 10).
+            
+        Returns:
+            Total cost in dollars for the conversation.
+        """
+        total_input_tokens = user_tokens * turns
+        total_output_tokens = model_tokens * turns
+        
+        # Prices are per million tokens
+        input_cost = (total_input_tokens / 1_000_000) * self.input_price
+        output_cost = (total_output_tokens / 1_000_000) * self.output_price
+        
+        return input_cost + output_cost
+    
+    def conversation_cost_display(self) -> str:
+        """Format conversation cost for display."""
+        cost = self.calculate_conversation_cost()
+        if cost == 0:
+            return "FREE"
+        elif cost < 0.01:
+            return f"${cost:.4f}"
+        else:
+            return f"${cost:.3f}"
 
 
 class OpenRouterClient:
@@ -214,6 +246,42 @@ def rank_models(models: List[Model]) -> List[Tuple[Model, int]]:
     return [(model, idx + 1) for idx, model in enumerate(sorted_models)]
 
 
+def generate_expandable_list(models_data: list, list_id: str, initial_count: int = 5) -> str:
+    """Generate an expandable list with show more functionality.
+    
+    Args:
+        models_data: List of HTML strings for each model
+        list_id: Unique ID for this list
+        initial_count: Number of items to show initially
+        
+    Returns:
+        HTML string with expandable list
+    """
+    html = []
+    total = len(models_data)
+    
+    for i, model_html in enumerate(models_data):
+        # Add visibility classes based on position
+        if i < initial_count:
+            html.append(model_html)
+        elif i < 10:
+            # Hidden initially, shown when expanding to 10
+            html.append(model_html.replace('<li', '<li class="hidden show-10"'))
+        else:
+            # Hidden initially, shown when expanding to 25
+            html.append(model_html.replace('<li', '<li class="hidden show-25"'))
+    
+    # Add expand button if there are more than initial_count items
+    if total > initial_count:
+        html.append(f'''                        <li class="expand-control">
+                            <button class="expand-btn" data-list="{list_id}" data-state="5" onclick="expandList('{list_id}')">
+                                Show More... (5/{total})
+                            </button>
+                        </li>\n''')
+    
+    return ''.join(html)
+
+
 def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> str:
     """Generate HTML report for all categories.
     
@@ -234,10 +302,17 @@ def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> 
 </head>
 <body>
     <div class="container">
-        <header>
+        <header id="top">
             <h1>OpenRouter Models as of {date_str}</h1>
-            <button id="theme-toggle" aria-label="Toggle dark/light mode">🌓</button>
+            <div class="header-controls">
+                <button id="theme-toggle" aria-label="Toggle dark/light mode">🌓</button>
+            </div>
         </header>
+        <nav class="date-nav">
+            <button id="prev-date" aria-label="Previous day">← Previous Day</button>
+            <span id="current-date">{date_str}</span>
+            <button id="next-date" aria-label="Next day">Next Day →</button>
+        </nav>
         <nav class="category-nav">
             <ul>
 """]
@@ -264,49 +339,67 @@ def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> 
         # Sort by price (highest first)
         by_price_high = sorted(models, key=lambda m: m.total_price, reverse=True)
         
-        # Sort by price (lowest first) - exclude free for better visibility
+        # Sort by price (lowest first)
         by_price_low = sorted(models, key=lambda m: m.total_price)
         
-        # Get free models
-        free_models = [m for m in models if m.is_free][:3]
+        # Get free models (cap at 25)
+        free_models = [m for m in models if m.is_free][:25]
+        
+        category_id = category.lower().replace(' ', '-')
         
         html_parts.append(f"""
-            <section id="{category.lower()}" class="category-section">
-                <h2>{category}</h2>
+            <section id="{category_id}" class="category-section">
+                <div class="category-header">
+                    <h2>{category}</h2>
+                    <a href="#top" class="back-to-top-btn">↑ Go to Top</a>
+                </div>
                 
                 <article class="subsection">
                     <h3>Daily Rankings</h3>
-                    <ol class="model-list">
+                    <ol class="model-list" id="{category_id}-daily">
 """)
         
-        # Daily Rankings (top 10)
-        for model, rank in ranked_models[:10]:
-            html_parts.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span></li>\n')
+        # Daily Rankings - Generate all 25, but mark visibility
+        daily_items = []
+        for model, rank in ranked_models[:25]:
+            conv_cost = model.conversation_cost_display()
+            daily_items.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span> <span class="conv-cost">10-turn: {conv_cost}</span></li>\n')
+        
+        html_parts.append(generate_expandable_list(daily_items, f"{category_id}-daily"))
         
         html_parts.append("""                    </ol>
                 </article>
                 
                 <article class="subsection">
                     <h3>Rankings by Price (Highest First)</h3>
-                    <ol class="model-list">
+                    <ol class="model-list" id=\"""" + f"{category_id}-high" + """\">
 """)
         
-        # By Price (Highest) - top 10
-        for model in by_price_high[:10]:
-            html_parts.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span></li>\n')
+        # By Price (Highest) - top 25 with ranking reference
+        high_items = []
+        for model in by_price_high[:25]:
+            ranking = rankings_map.get(model.id, '?')
+            conv_cost = model.conversation_cost_display()
+            high_items.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span> <span class="ranking">(ranking: #{ranking})</span> <span class="conv-cost">10-turn: {conv_cost}</span></li>\n')
+        
+        html_parts.append(generate_expandable_list(high_items, f"{category_id}-high"))
         
         html_parts.append("""                    </ol>
                 </article>
                 
                 <article class="subsection">
                     <h3>Rankings by Price (Lowest First)</h3>
-                    <ol class="model-list">
+                    <ol class="model-list" id=\"""" + f"{category_id}-low" + """\">
 """)
         
-        # By Price (Lowest) - top 10 with ranking reference
-        for model in by_price_low[:10]:
+        # By Price (Lowest) - top 25 with ranking reference
+        low_items = []
+        for model in by_price_low[:25]:
             ranking = rankings_map.get(model.id, '?')
-            html_parts.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span> <span class="ranking">(ranking: #{ranking})</span></li>\n')
+            conv_cost = model.conversation_cost_display()
+            low_items.append(f'                        <li>{model.display_name} <span class="price">{model.price_display()}</span> <span class="ranking">(ranking: #{ranking})</span> <span class="conv-cost">10-turn: {conv_cost}</span></li>\n')
+        
+        html_parts.append(generate_expandable_list(low_items, f"{category_id}-low"))
         
         html_parts.append("""                    </ol>
                 </article>
@@ -316,11 +409,14 @@ def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> 
         if free_models:
             html_parts.append("""                <article class="subsection">
                     <h3>Best FREE Models</h3>
-                    <ul class="model-list free-models">
+                    <ul class="model-list free-models" id=\"""" + f"{category_id}-free" + """\">
 """)
+            free_items = []
             for model in free_models:
                 ranking = rankings_map.get(model.id, '?')
-                html_parts.append(f'                        <li><span class="free-badge">[FREE]</span> {model.display_name} <span class="ranking">({category} #{ranking})</span></li>\n')
+                free_items.append(f'                        <li><span class="free-badge">[FREE]</span> {model.display_name} <span class="ranking">({category} #{ranking})</span></li>\n')
+            
+            html_parts.append(generate_expandable_list(free_items, f"{category_id}-free"))
             
             html_parts.append("""                    </ul>
                 </article>
@@ -337,6 +433,37 @@ def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> 
     </div>
     
     <script>
+        // Expand list functionality
+        function expandList(listId) {
+            const list = document.getElementById(listId);
+            const btn = list.querySelector('.expand-btn');
+            const currentState = parseInt(btn.dataset.state);
+            const allItems = list.querySelectorAll('li:not(.expand-control)');
+            const totalItems = allItems.length;
+            
+            if (currentState === 5) {
+                // Expand to 10
+                list.querySelectorAll('.show-10').forEach(item => item.classList.remove('hidden'));
+                btn.dataset.state = '10';
+                if (totalItems > 10) {
+                    btn.textContent = `Show More... (10/${totalItems})`;
+                } else {
+                    btn.textContent = `Show Less`;
+                    btn.dataset.state = '10-max';
+                }
+            } else if (currentState === 10) {
+                // Expand to 25
+                list.querySelectorAll('.show-25').forEach(item => item.classList.remove('hidden'));
+                btn.textContent = 'Show Less';
+                btn.dataset.state = '25';
+            } else {
+                // Collapse back to 5
+                list.querySelectorAll('.show-10, .show-25').forEach(item => item.classList.add('hidden'));
+                btn.textContent = `Show More... (5/${totalItems})`;
+                btn.dataset.state = '5';
+            }
+        }
+        
         // Dark/Light mode toggle
         const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
@@ -365,6 +492,26 @@ def generate_html(categorized_models: Dict[str, List[Model]], date_str: str) -> 
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
+        });
+        
+        // Date navigation
+        document.getElementById('prev-date').addEventListener('click', () => {
+            const date = new Date('""" + date_str + """');
+            date.setDate(date.getDate() - 1);
+            const newDate = date.toISOString().split('T')[0];
+            window.location.href = `models-${newDate}.html`;
+        });
+        
+        document.getElementById('next-date').addEventListener('click', () => {
+            const date = new Date('""" + date_str + """');
+            date.setDate(date.getDate() + 1);
+            const newDate = date.toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
+            if (newDate <= today) {
+                window.location.href = `models-${newDate}.html`;
+            } else {
+                alert('Future dates not available yet!');
+            }
         });
     </script>
 </body>
@@ -412,6 +559,10 @@ def generate_css() -> str:
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--bg-primary);
@@ -432,13 +583,19 @@ header {
     align-items: center;
     padding: 30px 0;
     border-bottom: 2px solid var(--border-color);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 h1 {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+.header-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 #theme-toggle {
@@ -458,6 +615,45 @@ h1 {
 #theme-toggle:hover {
     transform: scale(1.1);
     border-color: var(--accent-color);
+}
+
+.date-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.date-nav button {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.date-nav button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.date-nav button:active {
+    transform: translateY(0);
+}
+
+#current-date {
+    font-weight: 600;
+    font-size: 1.1rem;
+    min-width: 120px;
+    text-align: center;
 }
 
 .category-nav {
@@ -500,12 +696,36 @@ h1 {
     box-shadow: 0 4px 6px var(--shadow);
 }
 
-.category-section h2 {
-    font-size: 1.8rem;
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 25px;
-    color: var(--accent-color);
     border-bottom: 3px solid var(--accent-color);
     padding-bottom: 10px;
+}
+
+.category-section h2 {
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    margin: 0;
+}
+
+.back-to-top-btn {
+    background: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.back-to-top-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
 }
 
 .subsection {
@@ -534,12 +754,55 @@ h1 {
     border-radius: 6px;
     border: 1px solid var(--border-color);
     transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-.model-list li:hover {
+.model-list li:not(.expand-control):hover {
     background: var(--bg-primary);
     border-color: var(--accent-color);
     transform: translateX(5px);
+}
+
+.model-list li.hidden {
+    display: none;
+}
+
+.expand-control {
+    list-style: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.expand-control:hover {
+    background: transparent;
+    transform: none;
+}
+
+.expand-btn {
+    width: 100%;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.expand-btn:active {
+    transform: translateY(0);
 }
 
 .price {
@@ -552,6 +815,17 @@ h1 {
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-left: 10px;
+}
+
+.conv-cost {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
 .free-badge {
@@ -601,6 +875,26 @@ footer a:hover {
         font-size: 1.5rem;
     }
     
+    .category-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .back-to-top-btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .date-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .date-nav button {
+        width: 100%;
+    }
+    
     .category-nav ul {
         justify-content: center;
     }
@@ -609,7 +903,17 @@ footer a:hover {
         padding: 20px;
     }
     
-    .model-list li:hover {
+    .model-list li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .conv-cost {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+    
+    .model-list li:not(.expand-control):hover {
         transform: none;
     }
 }
