@@ -1,0 +1,62 @@
+<section class="info-section">
+            <div class="info-header">
+                <h2>About This Report</h2>
+                <button id="toggle-info" class="toggle-btn" aria-label="Show more information">Show Less ▲</button>
+            </div>
+            <div id="info-content" class="info-content">
+                <div class="info-subsection">
+                    <p>This daily report tracks AI models available through <a href="https://openrouter.ai/" target="_blank" rel="noopener">OpenRouter</a>, an API gateway providing access to dozens of language models from providers like Anthropic, OpenAI, Google, Meta, and others.</p>
+
+                    <p>We fetch OpenRouter's model data and organize it using <strong>their 12 categories</strong>—Programming, Roleplay, Marketing, SEO, Technology, Science, Translation, Legal, Finance, Health, Trivia, and Academia. Our goal is to simplify their website for people who want a quicker, easier comparison between models.</p>
+
+                    <p><strong>What you'll find here:</strong></p>
+                    <ul>
+                        <li><strong>Daily Rankings</strong> - Models sorted by token cost and rankings (model popularity)</li>
+                        <li><strong>Price Comparisons</strong> - Models ranked from most to least expensive, with a standardized "10-turn" comparison that is more human-friendly than figuring out how much $2/million tokens will cost.</li>
+                        <li><strong>Free Models</strong> - Many models are available as rate-limited free versions, or are completely free for a variety of reasons. We rank these models for each category, in order of popularity.</li>
+                        <li><strong>Conversation Cost Calculator</strong> - Real-world pricing ("10-turn conversation") based on standardized usage to help you compare the costs of different models and get a rough idea of whether your exchange will cost you pennies or several dollars.</li>
+                    </ul>
+                </div>
+
+                <div class="info-subsection">
+                    <h3>How We Calculate "10-Turn" Conversation Cost</h3>
+                    <p>Most AI models charge per million tokens. A token is roughly 4 characters or ¾ of a word (e.g., <span class="token-example">"This sentence has approximately 8 tokens"</span>). Learn more at <a href="https://docs.anthropic.com/en/docs/welcome" target="_blank" rel="noopener">Anthropic's Token Guide</a> or use <a href="https://platform.openai.com/tokenizer" target="_blank" rel="noopener">OpenAI's Tokenizer</a> to calculate token counts yourself.</p>
+
+                    <p>But what does "$3 per million input tokens" actually mean for your wallet? To make pricing relatable, we calculate the cost of a <strong>standardized 10-turn conversation</strong>:</p>
+
+                    <ul>
+                        <li><strong>Your input:</strong> 125 tokens per message (~600 words total, ~5 sentences each turn)</li>
+                        <li><strong>Model output:</strong> 375 tokens per response (~1,800 words total, ~15 sentences each turn)</li>
+                    </ul>
+
+                    <p>This gives you a concrete number—like <strong>$0.058 for 10 turns</strong> that is easier to understand than abstract per-million pricing. <em>Most conversations cost between $0.001 and $0.10 with our metric, though premium models can exceed $0.25 per 10-turn exchange.</em></p>
+
+                    <p><strong>Important:</strong> Your actual costs will vary significantly based on usage:</p>
+                    <ul>
+                        <li><strong>Code generation:</strong> Models outputting long code files use far more output tokens (higher cost)</li>
+                        <li><strong>Simple Q&amp;A:</strong> Quick factual answers use fewer tokens (lower cost)</li>
+                        <li><strong>Roleplay/chat:</strong> Conversational back-and-forth typically falls in the middle</li>
+                        <li><strong>Document analysis:</strong> Large input documents increase input token usage</li>
+                    </ul>
+
+                    <p>Think of our 10-turn metric as a <strong>baseline for comparison</strong>, not a prediction of your specific usage. A $0.10 conversation vs $0.002 tells you which model is 50× more expensive—useful for budget planning even if your actual usage differs.</p>
+                </div>
+
+                <div class="info-subsection faq">
+                    <h3>Frequently Asked Questions</h3>
+                    <details>
+                        <summary>Why are some models ranked higher than others?</summary>
+                        <p>OpenRouter does not benchmark models on specific tasks. The "rankings" in our tables reflect how popular the model across all categories. It's essentially the percentage of users who are using a particular model, not how good the model is at a particular category. We use price as a proxy for accessibility—lower cost models are often are ranked higher because they're more accessible to a wider audience.</p>
+                    </details>
+                    <details>
+                        <summary>Are free models worse?</summary>
+                        <p>Not necessarily! Many free models are excellent for specific tasks. In fact, many are rate-limited versions of the full model or 'lite' versions that are often as good as the affordable paid models. For example, GLM 4.5-Air (free) and KAT-Coder-Pro V1 (free) are both excellent models you may wish to try. Alternatively, they may be in beta, sponsored to increase their customer base, or designed for specific use cases. Always test models for your needs.</p>
+                    </details>
+                    <details>
+                        <summary>How often is this updated?</summary>
+                        <p>Daily. We pull fresh data daily from <a href="https://openrouter.ai/models" target="_blank" rel="noopener">OpenRouter's API</a> to ensure pricing and availability are current.</p>
+                    </details>
+
+                </div>
+            </div>
+        </section>
