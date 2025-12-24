@@ -1,10 +1,11 @@
 # ModelScrapOR
 
-**THIS PROJECT WAS "VIBE-CODED" BY Claude Sonnet 4.5 AS A TEST**
+**THIS PROJECT WAS "VIBE-CODED" BY CLAUDE SONNNET 4.5 AS A TEST**
 
-It's a quick script I've wanted for myself and I've made it public only for educational purposes.
+It's a quick script I decided to make for myself, as a static page will be faster for showing me models and costs than navigating Openrouter.
 
-All contents except in this one paragraph is AI-generated.
+Why did I do it? Well, if you really care, [read the Wiki](https://github.com/ktalanov/ModelScrapOR/wiki). 
+*N.B. All contents except where explicitly marked, including this file (minus this and the preceding seven liens) are computer generated. Here be dragons.
 
 ---
 
@@ -31,7 +32,7 @@ ModelScrapOR is a Python script that scrapes the OpenRouter API to generate comp
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/yourusername/ModelScrapOR.git
+git clone https://github.com/ktalanov/ModelScrapOR.git
 cd ModelScrapOR
 ```
 
