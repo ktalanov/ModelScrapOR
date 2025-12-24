@@ -5,15 +5,16 @@
 It's a quick script I decided to make for myself, as a static page will be faster for showing me models and costs than navigating Openrouter.
 
 Why did I do it? Well, if you really care, [read the Wiki](https://github.com/ktalanov/ModelScrapOR/wiki). 
-*N.B. All contents except where explicitly marked, including this file (minus this and the preceding seven liens) are computer generated. Here be dragons.
+H.N.* All contents except where explicitly marked, including this file (minus this and the preceding seven liens) are computer generated. Here be dragons.
+[0] H.N. means "human note". Much like NB, but now with 20x more dystopia.
 
 ---
 
-> Daily OpenRouter AI Model Rankings & Pricing Tracker
+## Daily OpenRouter AI Model Rankings & Pricing Tracker
 
 ModelScrapOR is a Python script that scrapes the OpenRouter API to generate comprehensive daily reports of AI model rankings, pricing, and availability across multiple categories.
 
-## Features
+### Features
 
 - 📊 **12 Category Coverage**: Track models across Programming, Roleplay, Marketing, SEO, Technology, Science, Translation, Legal, Finance, Health, Trivia, and Academia
 - 💰 **Pricing Analysis**: Sort models by cost (high to low, low to high) with transparent per-million-token pricing
@@ -22,13 +23,13 @@ ModelScrapOR is a Python script that scrapes the OpenRouter API to generate comp
 - 🌓 **Dark/Light Mode**: Beautiful HTML output with automatic theme detection and manual toggle
 - 📅 **Daily Archives**: Generate timestamped reports (`models-YYYY-MM-DD.html`) for historical tracking
 
-## Prerequisites
+### Prerequisites
 
 - Python 3.8+
 - OpenRouter API key
 - Fedora 43 KDE Plasma (or any Linux distribution)
 
-## Installation
+### Installation
 
 1. **Clone the repository**:
 ```bash
@@ -81,7 +82,7 @@ firefox models-2025-12-23.html
 xdg-open models-2025-12-23.html
 ```
 
-## Output Format
+### Output Format
 
 Each generated HTML report contains:
 
@@ -92,7 +93,7 @@ Each generated HTML report contains:
 3. **Rankings by Price (Lowest)** - Most affordable models with daily ranking reference
 4. **Best FREE Models** - Up to 3 free models per category
 
-### Example Output Structure:
+#### Example Output Structure:
 
 ```
 OpenRouter Models as of 2025-12-23
@@ -111,7 +112,7 @@ Roleplay
 └── ...
 ```
 
-### Pricing Format
+#### Pricing Format
 
 Pricing is displayed as `($X/$Y)` where:
 - **$X** = Cost per million input tokens
@@ -134,7 +135,7 @@ ModelScrapOR/
 └── .gitignore                     # Git ignore rules
 ```
 
-## Development Status
+### Development Status
 
 🚧 **Project Status**: Planning Phase
 
@@ -147,13 +148,27 @@ See [PLAN.md](PLAN.md) for detailed milestones and implementation roadmap.
 - [ ] Milestone 4: HTML & CSS Generation
 - [ ] Milestone 5: Integration & Polish
 
-## Configuration
+*H.N. It appears that the AI has not updated this either. I'm still trying to get it to be consistent re: CHANGELOG.md and README.md.*
 
-### Environment Variables
+### Configuration
 
-- `OPENROUTER_API_KEY` - Your OpenRouter API key (required)
+#### Environment Variables
 
-### Categories Tracked
+Add this to .env in your main github directory, in the format of:
+
+`OPENROUTER_API_KEY=sr...ce`
+
+If you want to have it available to other projects, you can add it to your .bashrc or .zshrc with:
+
+`EXPORT OPENROUTER_API_KEY='sr..ce'`
+
+H.N. **IMPORTANT SECURITY TIP:** If you are storing secrets in files like .bashrc or .env please use a [POSIX permissions calculator](https://chmod-calculator.com/) to set the correct permissions. In this case, you want to set it to 600 (i.e. `rw-------` which means that only the user that owns the file may read/write to it.) Otherwise, anyone with any privileges on your system can read your file and any tokens within it.
+
+*Free tip:* make sure that your .ssh folder and the files inside have the proper permissions as well!
+
+This script is set-up to use the .env, as that makes the OPENROUTER key stay in the directory of the repository, instead of on the local machine in the user's profile.
+
+#### Categories Tracked
 
 1. Programming
 2. Roleplay
@@ -168,9 +183,9 @@ See [PLAN.md](PLAN.md) for detailed milestones and implementation roadmap.
 11. Trivia
 12. Academia
 
-## Troubleshooting
+### Troubleshooting
 
-### Permission Errors on Fedora
+#### Permission Errors on Fedora
 
 If you encounter permission errors, use `pkexec` instead of `sudo`:
 ```bash
@@ -183,7 +198,7 @@ pkexec dnf install python3-pip
 
 This will show a GUI prompt for password authentication.
 
-### API Key Not Found
+#### API Key Not Found
 
 If you get an API key error:
 
@@ -207,14 +222,14 @@ OPENROUTER_API_KEY=your_actual_key_here
 echo 'OPENROUTER_API_KEY="your_api_key_here"' > .env
 ```
 
-### Missing Dependencies
+#### Missing Dependencies
 
 Install required Python packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Contributing
+### Contributing
 
 Contributions are welcome! Please:
 
@@ -224,14 +239,20 @@ Contributions are welcome! Please:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+H.N. If someone, for some incomprehensible reason, does this for this POS monstrosity, I will be a) incredibly impressed and b) incredibly concerned for your state of well-being.
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### License
 
-## Acknowledgments
+This project is licensed under the Creative Commons [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. If you are allergic to links, the summary is:
 
-- [OpenRouter](https://openrouter.ai/) - For providing the API
-- AI model providers (Anthropic, OpenAI, Google, etc.) - For their amazing models
+- This license enables reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. CC BY includes the following elements:
+
+Your only obligations are the `BY` part in `CC-BY`, which stand for "credit must be given to the creator|.
+
+### Acknowledgments
+
+- [OpenRouter](https://openrouter.ai/) - for providing the API and taking my money
+- AI model providers (Anthropic, OpenAI, Google, etc.) - for either ending humanity forever or sending us into an age of Utopia
 
 ## Roadmap
 
